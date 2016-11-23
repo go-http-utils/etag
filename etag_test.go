@@ -24,7 +24,7 @@ type EmptyEtagSuite struct {
 
 func (s *EmptyEtagSuite) SetupTest() {
 	mux := http.NewServeMux()
-	mux.Handle("/", Handler(http.HandlerFunc(emptyHandlerFunc)))
+	mux.Handle("/", Handler(http.HandlerFunc(emptyHandlerFunc), false))
 
 	s.server = httptest.NewServer(mux)
 }
@@ -44,14 +44,20 @@ func TestEmptyEtag(t *testing.T) {
 type EtagSuite struct {
 	suite.Suite
 
-	server *httptest.Server
+	server     *httptest.Server
+	weakServer *httptest.Server
 }
 
 func (s *EtagSuite) SetupTest() {
 	mux := http.NewServeMux()
-	mux.Handle("/", Handler(http.HandlerFunc(handlerFunc)))
+	mux.Handle("/", Handler(http.HandlerFunc(handlerFunc), false))
 
 	s.server = httptest.NewServer(mux)
+
+	wmux := http.NewServeMux()
+	wmux.Handle("/", Handler(http.HandlerFunc(handlerFunc), true))
+
+	s.weakServer = httptest.NewServer(wmux)
 }
 
 func (s EtagSuite) TestEtagExists() {
@@ -64,6 +70,18 @@ func (s EtagSuite) TestEtagExists() {
 	h.Write(testStrBytes)
 
 	s.Equal(fmt.Sprintf("%v-%v", len(testStrBytes), hex.EncodeToString(h.Sum(nil))), res.Header.Get(headers.ETag))
+}
+
+func (s EtagSuite) TestWeakEtagExists() {
+	res, err := http.Get(s.weakServer.URL + "/")
+
+	s.Nil(err)
+	s.Equal(http.StatusOK, res.StatusCode)
+
+	h := sha1.New()
+	h.Write(testStrBytes)
+
+	s.Equal(fmt.Sprintf("w/%v-%v", len(testStrBytes), hex.EncodeToString(h.Sum(nil))), res.Header.Get(headers.ETag))
 }
 
 func (s EtagSuite) TestMatch() {

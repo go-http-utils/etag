@@ -14,7 +14,7 @@ import (
 )
 
 // Version is this package's version.
-const Version = "0.1.0"
+const Version = "0.2.0"
 
 type hashWriter struct {
 	rw     http.ResponseWriter
@@ -51,7 +51,7 @@ func writeRaw(res http.ResponseWriter, hw hashWriter) {
 }
 
 // Handler wraps the http.Handler h with ETag support.
-func Handler(h http.Handler) http.Handler {
+func Handler(h http.Handler, weak bool) http.Handler {
 	return http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
 		hw := hashWriter{rw: res, hash: sha1.New(), buf: bytes.NewBuffer(nil)}
 		h.ServeHTTP(&hw, req)
@@ -66,8 +66,14 @@ func Handler(h http.Handler) http.Handler {
 			return
 		}
 
-		resHeader.Set(headers.ETag, fmt.Sprintf("%v-%v", strconv.Itoa(hw.len),
-			hex.EncodeToString(hw.hash.Sum(nil))))
+		etag := fmt.Sprintf("%v-%v", strconv.Itoa(hw.len),
+			hex.EncodeToString(hw.hash.Sum(nil)))
+
+		if weak {
+			etag = "w/" + etag
+		}
+
+		resHeader.Set(headers.ETag, etag)
 
 		if fresh.IsFresh(req.Header, resHeader) {
 			res.WriteHeader(http.StatusNotModified)
