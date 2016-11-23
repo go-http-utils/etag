@@ -28,5 +28,5 @@ mux.HandleFunc("/", func(res http.ResponseWriter, req *http.Request) {
   res.Write([]byte("Hello World"))
 })
 
-http.ListenAndServe(":8080", etag.Handler(mux))
+http.ListenAndServe(":8080", etag.Handler(mux, false))
 ```
