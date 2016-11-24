@@ -81,7 +81,7 @@ func (s EtagSuite) TestWeakEtagExists() {
 	h := sha1.New()
 	h.Write(testStrBytes)
 
-	s.Equal(fmt.Sprintf("w/%v-%v", len(testStrBytes), hex.EncodeToString(h.Sum(nil))), res.Header.Get(headers.ETag))
+	s.Equal(fmt.Sprintf("W/%v-%v", len(testStrBytes), hex.EncodeToString(h.Sum(nil))), res.Header.Get(headers.ETag))
 }
 
 func (s EtagSuite) TestMatch() {

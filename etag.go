@@ -14,7 +14,7 @@ import (
 )
 
 // Version is this package's version.
-const Version = "0.2.0"
+const Version = "0.2.1"
 
 type hashWriter struct {
 	rw     http.ResponseWriter
@@ -61,6 +61,7 @@ func Handler(h http.Handler, weak bool) http.Handler {
 		if hw.hash == nil ||
 			resHeader.Get(headers.ETag) != "" ||
 			strconv.Itoa(hw.status)[0] != '2' ||
+			hw.status == http.StatusNoContent ||
 			hw.buf.Len() == 0 {
 			writeRaw(res, hw)
 			return
@@ -70,7 +71,7 @@ func Handler(h http.Handler, weak bool) http.Handler {
 			hex.EncodeToString(hw.hash.Sum(nil)))
 
 		if weak {
-			etag = "w/" + etag
+			etag = "W/" + etag
 		}
 
 		resHeader.Set(headers.ETag, etag)
