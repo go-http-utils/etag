@@ -67,7 +67,7 @@ func Handler(h http.Handler, weak bool) http.Handler {
 			return
 		}
 
-		etag := fmt.Sprintf("%v-%v", strconv.Itoa(hw.len),
+		etag := fmt.Sprintf("\"%v-%v\"", strconv.Itoa(hw.len),
 			hex.EncodeToString(hw.hash.Sum(nil)))
 
 		if weak {
